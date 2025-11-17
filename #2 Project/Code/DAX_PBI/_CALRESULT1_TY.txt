@@ -1,0 +1,69 @@
+#_CALRESULT1_TY = 
+
+// ---------------------------------------------------------------------------------- V2. ----------------------------------------------------------------------------------
+
+VAR GROUP_BY_Pur_Grp =
+SUMMARIZE(
+        VW_FACT_MS_FORM,
+        //VW_FACT_MS_FORM[Function_Name],
+        //VW_FACT_MS_FORM[Scoring_Group],
+        //VW_FACT_MS_FORM[Question_Number],
+        VW_FACT_MS_FORM[Pur_Grp],
+        VW_FACT_MS_FORM[Title],
+        "C_SumScore", SUM(VW_FACT_MS_FORM[Score]),
+        "C_SumWeight", SUM(VW_FACT_MS_FORM[Weight])
+    )
+
+VAR C_ScoreTotal1 = 
+SUMX(
+ADDCOLUMNS(
+    SUMMARIZE(GROUP_BY_Pur_Grp, [Pur_Grp]),
+    "AVG_Score", AVERAGEX(FILTER(GROUP_BY_Pur_Grp, [Pur_Grp] = EARLIER([Pur_Grp])), [C_SumScore]) // EARLIER([Pur_Grp]) คือจนวนลูปแต่ละค่าของ Pur_Grp ในที่นี้เช่น Store, QA etc
+),[AVG_Score]
+)
+
+VAR C_ScoreTotal2 = 
+SUMX(
+ADDCOLUMNS(
+    SUMMARIZE(GROUP_BY_Pur_Grp, [Pur_Grp]),
+    "AVG_Weight", AVERAGEX(FILTER(GROUP_BY_Pur_Grp, [Pur_Grp] = EARLIER([Pur_Grp])), [C_SumWeight]) // EARLIER([Pur_Grp]) คือจนวนลูปแต่ละค่าของ Pur_Grp ในที่นี้เช่น Store, QA etc
+),[AVG_Weight]
+)
+
+VAR C_ScoreTotal = C_ScoreTotal1/C_ScoreTotal2 * 100
+
+
+// ---------------------------------------------------------------------------------- V1. ----------------------------------------------------------------------------------
+
+VAR T =
+SUMX(
+SUMMARIZE(
+VW_FACT_MS_FORM,
+VW_FACT_MS_FORM[Function_Name],
+VW_FACT_MS_FORM[Scoring_Group],
+VW_FACT_MS_FORM[Pur_Grp],
+VW_FACT_MS_FORM[Question_Number],
+
+"SumScore",
+CALCULATE( SUM(VW_FACT_MS_FORM[Score_UniqueID]) , ALL(VW_FACT_MS_FORM[UniqueID]) ) /
+CALCULATE( DISTINCTCOUNT(VW_FACT_MS_FORM[UniqueID]) , ALL(VW_FACT_MS_FORM[UniqueID]) )
+) , [SumScore]
+)VAR Z = T / DISTINCTCOUNT(VW_FACT_MS_FORM[Scoring_Group])
+
+VAR X = SUMX(
+SUMMARIZE(
+VW_FACT_MS_FORM,
+VW_FACT_MS_FORM[Function_Name],
+VW_FACT_MS_FORM[Vendor_Name],
+VW_FACT_MS_FORM[RoundYear],
+
+"SumScore", AVERAGE(VW_FACT_MS_FORM[RawVendorLevelScore])
+
+) , [SumScore])
+
+RETURN  
+IF(
+    OR(VALUE(SELECTEDVALUE(VW_FACT_MS_FORM[FormYear], "0")) <= 1999, VALUE(SELECTEDVALUE(VW_FACT_MS_FORM[FormYear], "0")) >= 2025),
+    C_ScoreTotal,
+    IF( ISINSCOPE(VW_FACT_MS_FORM[FormYear]), x/COUNTROWS(distinct(VW_FACT_MS_FORM[RoundYear])), Z)
+)

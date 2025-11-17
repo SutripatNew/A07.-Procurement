@@ -1,0 +1,266 @@
+##Score = 
+
+// ---------------------------------------------------------------------------------- V2. ----------------------------------------------------------------------------------
+// คำนวณเพื่อออกคะแนน by ข้อ
+VAR C_Score = 
+SUMX(
+SUMMARIZE(
+    VW_FACT_MS_FORM_REPORT,
+    //VW_FACT_MS_FORM_REPORT[FormYear],
+    //VW_FACT_MS_FORM_REPORT[Level2],
+    //VW_FACT_MS_FORM_REPORT[Level3],
+    //VW_FACT_MS_FORM_REPORT[UniqueID],
+    VW_FACT_MS_FORM_REPORT[Pur_Grp],
+    "AVG_Score", AVERAGE(VW_FACT_MS_FORM_REPORT[Cell_Value])
+), [AVG_Score]
+)
+
+// คำนวณเพื่อออกคะแนน 
+VAR C_Total_Score1 = 
+SUMX(
+SUMMARIZE(
+    VW_FACT_MS_FORM_REPORT,
+    //VW_FACT_MS_FORM_REPORT[FormYear],
+    //VW_FACT_MS_FORM_REPORT[Level2],
+    //VW_FACT_MS_FORM_REPORT[Level3],
+    //VW_FACT_MS_FORM_REPORT[UniqueID],
+    VW_FACT_MS_FORM_REPORT[Pur_Grp],
+    "AVG_Score", AVERAGE(VW_FACT_MS_FORM_REPORT[Cell_Value])
+), [AVG_Score]
+)
+
+VAR C_Total_Score2 = 
+SUMX(
+SUMMARIZE(
+    VW_FACT_MS_FORM_REPORT,
+    //VW_FACT_MS_FORM_REPORT[FormYear],
+    //VW_FACT_MS_FORM_REPORT[Level2],
+    //VW_FACT_MS_FORM_REPORT[Level3],
+    //VW_FACT_MS_FORM_REPORT[UniqueID],
+    VW_FACT_MS_FORM_REPORT[Pur_Grp],
+    "Weight_Source", AVERAGE(VW_FACT_MS_FORM_REPORT[Weight_Source])
+), [Weight_Source]
+)
+
+VAR C_Total_Score = C_Total_Score1/C_Total_Score2 * 100
+VAR C_Grade = IF(C_Total_Score >= 85, "A", IF( C_Total_Score >= 68, "B", IF( C_Total_Score >= 51, "C", IF( C_Total_Score >= 0, "D", "-" ))))
+// ---------------------------------------------------------------------------------- V1. ----------------------------------------------------------------------------------
+
+VAR V_MANU = SUM(VW_FACT_MS_FORM_REPORT[Cell_Value])
+
+
+
+VAR V = SUM(VW_FACT_MS_FORM_REPORT[Cell_Value]) / DISTINCTCOUNT(VW_FACT_MS_FORM_REPORT[UniqueID])
+
+
+VAR G = IF( MIN(VW_FACT_MS_FORM_REPORT[Function_Name]) = "RM&PKG", 
+                IF(V >= 85, "A", IF( V >= 68, "B", IF( V >= 51, "C", IF( V >= 0, "D", "-" )))),
+                IF( MIN(VW_FACT_MS_FORM_REPORT[Function_Name]) = "Manufacturing", 
+                IF(V_MANU >= 85, "A", IF( V_MANU >= 68, "B", IF( V_MANU >= 51, "C", IF( V_MANU >= 0, "D", "-" )))),
+                IF(V >= 85, "A", IF( V >= 68, "B", IF( V >= 51, "C", IF( V >= 0, "D", "-" ))))
+            ))
+
+VAR C = MIN(VW_FACT_MS_FORM_REPORT[Comment])
+VAR S = IF( MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Total Grade", G,
+IF( MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Comment", FORMAT(C,""),
+IF( CONTAINSSTRING(MIN(VW_FACT_MS_FORM_REPORT[Question_Number]),"Q") , V, V)))
+
+VAR TB_Q_AVG = 
+SUMMARIZE(
+    FILTER(FILTER(VW_FACT_MS_FORM_REPORT, VW_FACT_MS_FORM_REPORT[Function_Name] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[Function_Name])), VW_FACT_MS_FORM_REPORT[Level1] IN VALUES( VW_FACT_MS_FORM_REPORT[Level1] )) ,
+    VW_FACT_MS_FORM_REPORT[FormYear],    
+    VW_FACT_MS_FORM_REPORT[Scoring_Group],            
+    VW_FACT_MS_FORM_REPORT[Vendor_Name],
+    VW_FACT_MS_FORM_REPORT[Level1],    
+    VW_FACT_MS_FORM_REPORT[Level2],
+    "SumUnique", SUM(VW_FACT_MS_FORM_REPORT[Cell_Value]),
+    "CountUnique", DISTINCTCOUNT(VW_FACT_MS_FORM_REPORT[UniqueID])
+)
+
+VAR SUM_UNIQUE = SUMX( TB_Q_AVG, [SumUnique] )
+VAR COUNT_UNIQUE = SUMX( TB_Q_AVG, [CountUnique] )
+// VAR SUM_COUNT_UNIQUE = SUM_UNIQUE / COUNT_UNIQUE
+VAR SUM_COUNT_UNIQUE = SUM_UNIQUE / COUNT_UNIQUE
+
+VAR TB_Q_TOTAL_AVG = 
+SUMMARIZE(
+    // FILTER(FILTER(ALL(VW_FACT_MS_FORM_REPORT), VW_FACT_MS_FORM_REPORT[QueryPart] = "10_QUESTION"),  VW_FACT_MS_FORM_REPORT[Function_Name] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[Function_Name])), 
+    FILTER(FILTER(FILTER(FILTER(FILTER(ALL(VW_FACT_MS_FORM_REPORT), VW_FACT_MS_FORM_REPORT[QueryPart] = "10_QUESTION"), VW_FACT_MS_FORM_REPORT[Function_Name] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[Function_Name])),VW_FACT_MS_FORM_REPORT[FormYear] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[FormYear])),
+    VW_FACT_MS_FORM_REPORT[Above1MB] IN VALUES(VW_FACT_MS_FORM_REPORT[Above1MB])),
+    VW_FACT_MS_FORM_REPORT[Level1] IN VALUES( VW_FACT_MS_FORM_REPORT[Level1] ) ),
+    VW_FACT_MS_FORM_REPORT[FormYear],
+    VW_FACT_MS_FORM_REPORT[Scoring_Group],         
+    VW_FACT_MS_FORM_REPORT[Function_Name],
+    VW_FACT_MS_FORM_REPORT[Question_Number],
+    "SumQuestion", SUM(VW_FACT_MS_FORM_REPORT[Response_Value]) / DISTINCTCOUNT(VW_FACT_MS_FORM_REPORT[UniqueID])
+)
+
+VAR TB_Q_SCORING_GROUP = 
+SUMMARIZE(
+    FILTER(FILTER(FILTER(FILTER(FILTER(ALL(VW_FACT_MS_FORM_REPORT), VW_FACT_MS_FORM_REPORT[QueryPart] = "10_QUESTION"), VW_FACT_MS_FORM_REPORT[Function_Name] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[Function_Name])),
+    VW_FACT_MS_FORM_REPORT[Above1MB] IN VALUES(VW_FACT_MS_FORM_REPORT[Above1MB])),
+    VW_FACT_MS_FORM_REPORT[Level1] IN VALUES( VW_FACT_MS_FORM_REPORT[Level1] )),
+    VW_FACT_MS_FORM_REPORT[FormYear] IN VALUES( VW_FACT_MS_FORM_REPORT[FormYear] )),
+  
+    "Total_Scoring_Group", DISTINCTCOUNT(VW_FACT_MS_FORM_REPORT[Scoring_Group])
+)
+VAR TOTAL_Q_SCORING_GROUP = SUMX( TB_Q_SCORING_GROUP, [Total_Scoring_Group] )
+VAR SUM_QUESTION = SUMX( TB_Q_TOTAL_AVG, [SumQuestion] ) / TOTAL_Q_SCORING_GROUP
+// VAR SUM_QUESTION = COUNTROWS( TB_Q_TOTAL_AVG )
+
+//** MANUFACTURING ONLY 
+
+VAR TB_Q_TOTAL_AVG_MANU = 
+SUMMARIZE(
+    FILTER(FILTER(FILTER(ALL(VW_FACT_MS_FORM_REPORT), VW_FACT_MS_FORM_REPORT[QueryPart] = "10_QUESTION"),  VW_FACT_MS_FORM_REPORT[Function_Name] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[Function_Name])),VW_FACT_MS_FORM_REPORT[FormYear] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[FormYear])), 
+    VW_FACT_MS_FORM_REPORT[FormYear],
+    VW_FACT_MS_FORM_REPORT[Function_Name],
+    VW_FACT_MS_FORM_REPORT[Scoring_Group],
+    VW_FACT_MS_FORM_REPORT[Question_Number],
+    VW_FACT_MS_FORM_REPORT[Level1],
+    VW_FACT_MS_FORM_REPORT[Level2],
+    "SumQuestion", SUM(VW_FACT_MS_FORM_REPORT[Cell_Value]) / DISTINCTCOUNT(VW_FACT_MS_FORM_REPORT[UniqueID])
+)
+
+VAR SUM_QUESION_MANU = SUMX( TB_Q_TOTAL_AVG_MANU, [SumQuestion] )
+// VAR SUM_QUESION_MANU = COUNTROWS( TB_Q_TOTAL_AVG_MANU )
+
+
+
+VAR TB_S_AVG = 
+SUMMARIZE(
+    FILTER(FILTER(FILTER(VW_FACT_MS_FORM_REPORT, VW_FACT_MS_FORM_REPORT[Function_Name] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[Function_Name])), VW_FACT_MS_FORM_REPORT[Level1] IN VALUES( VW_FACT_MS_FORM_REPORT[Level1] )),VW_FACT_MS_FORM_REPORT[FormYear] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[FormYear])) ,
+    VW_FACT_MS_FORM_REPORT[FormYear],
+    // VW_FACT_MS_FORM_REPORT[Scoring_Group],    
+    VW_FACT_MS_FORM_REPORT[Vendor_Name],
+    VW_FACT_MS_FORM_REPORT[Level1],    
+    VW_FACT_MS_FORM_REPORT[Level2],
+    VW_FACT_MS_FORM_REPORT[Weight_Total_Line],
+    "SumUnique", SUM(VW_FACT_MS_FORM_REPORT[Response_Value]),
+    "MaxResUnique", MAX(VW_FACT_MS_FORM_REPORT[Max_Response_Value]),
+    "CountUnique", DISTINCTCOUNT(VW_FACT_MS_FORM_REPORT[UniqueID])
+)
+VAR SUM_S_UNIQUE = SUMX( TB_S_AVG, [SumUnique] )
+VAR COUNT_S_UNIQUE = SUMX( TB_S_AVG, [CountUnique] )
+VAR MAX_S_UNIQUE = MAXX( TB_S_AVG, [MaxResUnique] )
+VAR WEIGHT_S_TOTAL_LINE = MAXX( TB_S_AVG, [Weight_Total_Line] )
+VAR SUM_COUNT_S_UNIQUE = ( SUM_S_UNIQUE / COUNT_S_UNIQUE ) 
+VAR SUM_RAW_SCORE_S_UNIQUE = ( SUM_S_UNIQUE / COUNT_S_UNIQUE ) / MAX_S_UNIQUE
+VAR SUM_SCORE_S_UNIQUE = ( ( SUM_S_UNIQUE / COUNT_S_UNIQUE ) / MAX_S_UNIQUE ) * WEIGHT_S_TOTAL_LINE
+VAR SUM_S_W = SUMX( TB_S_AVG, ( ( [SumUnique] / [CountUnique] ) / [MaxResUnique] ) * [Weight_Total_Line] )
+
+
+VAR TB_S_TOTAL_AVG = 
+/* Start Lek13Sep2021
+SUMMARIZE(
+    // FILTER(FILTER(ALL(VW_FACT_MS_FORM_REPORT), VW_FACT_MS_FORM_REPORT[QueryPart] = "20_SCORE"),  VW_FACT_MS_FORM_REPORT[Function_Name] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[Function_Name])), 
+    FILTER(FILTER(FILTER(ALL(VW_FACT_MS_FORM_REPORT), VW_FACT_MS_FORM_REPORT[QueryPart] = "20_SCORE"), VW_FACT_MS_FORM_REPORT[Function_Name] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[Function_Name])),
+    VW_FACT_MS_FORM_REPORT[Level1] IN VALUES( VW_FACT_MS_FORM_REPORT[Level1] ) ),    
+    VW_FACT_MS_FORM_REPORT[FormYear],
+    VW_FACT_MS_FORM_REPORT[Scoring_Group],        
+    VW_FACT_MS_FORM_REPORT[Function_Name],
+    VW_FACT_MS_FORM_REPORT[Question_Number],
+    VW_FACT_MS_FORM_REPORT[Weight_Total_Line],
+    "SumQuestion", ( SUM(VW_FACT_MS_FORM_REPORT[Response_Value]) / DISTINCTCOUNT(VW_FACT_MS_FORM_REPORT[UniqueID]) ) /  MAX(VW_FACT_MS_FORM_REPORT[Max_Response_Value])
+)End Lek13Sep2021 */ 
+
+
+SUMMARIZE(
+   FILTER( FILTER(FILTER(FILTER(FILTER(FILTER(ALL(VW_FACT_MS_FORM_REPORT), VW_FACT_MS_FORM_REPORT[QueryPart] = "20_SCORE"), VW_FACT_MS_FORM_REPORT[Function_Name] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[Function_Name])),VW_FACT_MS_FORM_REPORT[FormYear] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[FormYear])),
+VW_FACT_MS_FORM_REPORT[Above1MB] IN VALUES(VW_FACT_MS_FORM_REPORT[Above1MB])),
+    VW_FACT_MS_FORM_REPORT[Level1] IN VALUES( VW_FACT_MS_FORM_REPORT[Level1] ) ),   
+    VW_FACT_MS_FORM_REPORT[RoundYear] IN VALUES(VW_FACT_MS_FORM_REPORT[RoundYear])) ,
+    VW_FACT_MS_FORM_REPORT[FormYear],
+    VW_FACT_MS_FORM_REPORT[Scoring_Group],        
+    VW_FACT_MS_FORM_REPORT[Function_Name],
+    VW_FACT_MS_FORM_REPORT[Question_Number],
+    VW_FACT_MS_FORM_REPORT[Weight_Total_Line],
+    "SumQuestion", ( SUM(VW_FACT_MS_FORM_REPORT[Response_Value]) / DISTINCTCOUNT(VW_FACT_MS_FORM_REPORT[UniqueID]) ) /  MAX(VW_FACT_MS_FORM_REPORT[Max_Response_Value])
+)
+
+VAR TB_S_SCORING_GROUP = 
+/*
+SUMMARIZE(
+    FILTER(FILTER(FILTER(ALL(VW_FACT_MS_FORM_REPORT), VW_FACT_MS_FORM_REPORT[QueryPart] = "20_SCORE"), VW_FACT_MS_FORM_REPORT[Function_Name] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[Function_Name])),
+    VW_FACT_MS_FORM_REPORT[Level1] IN VALUES( VW_FACT_MS_FORM_REPORT[Level1] ) ),  
+    "Total_Scoring_Group", DISTINCTCOUNT(VW_FACT_MS_FORM_REPORT[Scoring_Group])
+)*/
+
+SUMMARIZE(
+    FILTER(FILTER(FILTER(FILTER(FILTER(FILTER(ALL(VW_FACT_MS_FORM_REPORT), VW_FACT_MS_FORM_REPORT[QueryPart] = "20_SCORE"), VW_FACT_MS_FORM_REPORT[Function_Name] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[Function_Name])), VW_FACT_MS_FORM_REPORT[Above1MB] IN VALUES(VW_FACT_MS_FORM_REPORT[Above1MB])),VW_FACT_MS_FORM_REPORT[FormYear] = SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[FormYear])),
+    VW_FACT_MS_FORM_REPORT[Level1] IN VALUES( VW_FACT_MS_FORM_REPORT[Level1] ) ),  
+    VW_FACT_MS_FORM_REPORT[RoundYear] IN VALUES(VW_FACT_MS_FORM_REPORT[RoundYear])),
+    "Total_Scoring_Group", DISTINCTCOUNT(VW_FACT_MS_FORM_REPORT[Scoring_Group])
+)
+
+
+VAR TOTAL_SCORING_GROUP = SUMX( TB_S_SCORING_GROUP, [Total_Scoring_Group] )
+VAR SUM_SCORE = SUMX( TB_S_TOTAL_AVG, [SumQuestion] * [Weight_Total_Line] ) / TOTAL_SCORING_GROUP
+// VAR SUM_QUESTION = COUNTROWS( TB_Q_TOTAL_AVG )
+VAR VSUM = SUM_SCORE
+VAR GSUM = IF( MIN(VW_FACT_MS_FORM_REPORT[Function_Name]) = "RM&PKG", 
+                IF(VSUM >= 90, "A", IF( VSUM >= 80, "B", IF( VSUM >= 70, "C", IF( VSUM >= 60, "D", "-" )))),
+                IF(VSUM >= 85, "A", IF( VSUM >= 68, "B", IF( VSUM >= 51, "C", IF( VSUM >= 0, "D", "-" ))))
+            )
+
+
+VAR SC_Old = 
+
+/* Edit
+// ช่อง Question Total ปกติ เฉพาะ Manufacturing เท่านั้น 
+IF ( AND(AND(ISINSCOPE( VW_FACT_MS_FORM_REPORT[FormYear]),MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Question Total"),MIN(VW_FACT_MS_FORM_REPORT[Function_Name]) = "Manufacturing"), V_MANU ,
+// ช่อง Score Total ปกติ เฉพาะ Manufacturing เท่านั้น 
+IF ( AND(AND(ISINSCOPE( VW_FACT_MS_FORM_REPORT[FormYear]),MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Score Total"),MIN(VW_FACT_MS_FORM_REPORT[Function_Name]) = "Manufacturing"), V_MANU ,
+
+End Edit */
+
+
+// ช่อง Total Grade ปกติ
+IF( AND(ISINSCOPE( VW_FACT_MS_FORM_REPORT[FormYear]), MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Total Grade"), G,
+// ช่องปกติ ของ Question
+IF( ISINSCOPE( VW_FACT_MS_FORM_REPORT[FormYear]) ,V , 
+// กรณี บรรทัดล่างสุด 
+// กรณีที่ 1 "เป็น Question Total"
+IF( MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Question Total", SUM_QUESTION,
+// กรณีที่ 2 "เป็น QXX ในช่อง Question"
+IF( CONTAINSSTRING(MIN(VW_FACT_MS_FORM_REPORT[Question_Number]),"Q"), SUM_COUNT_UNIQUE,
+// กรณีที่ 3 "เป็น Score Total"
+IF( MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Score Total", SUM_SCORE,
+// กรณีที่ 4 "เป็น Score เดี่ยวๆ"
+IF( CONTAINSSTRING(MIN(VW_FACT_MS_FORM_REPORT[Question_Number]),"S"), SUM_SCORE_S_UNIQUE,
+// กรณีที่ 5 "เป็น Total Grade"
+IF( MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Total Grade", GSUM,
+// กรณีที่ 6 "เป็น Comment"
+IF( MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Z-Comment", "",
+BLANK() ))))))))
+
+
+VAR SC_New = 
+// ช่อง Total Grade ปกติ
+ IF( AND(ISINSCOPE( VW_FACT_MS_FORM_REPORT[FormYear]), MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Total Grade"), C_Grade,
+// ช่อง Total Grade ปกติ
+IF( AND(ISINSCOPE( VW_FACT_MS_FORM_REPORT[FormYear]), MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Score Total"), C_Total_Score,
+// ช่องปกติ ของ Question
+IF( ISINSCOPE( VW_FACT_MS_FORM_REPORT[FormYear]) ,C_Score , 
+// กรณี บรรทัดล่างสุด 
+// กรณีที่ 1 "เป็น Question Total"
+IF( MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Question Total", C_Score, //SUM_QUESTION,
+// กรณีที่ 2 "เป็น QXX ในช่อง Question"
+IF( CONTAINSSTRING(MIN(VW_FACT_MS_FORM_REPORT[Question_Number]),"Q"), C_Score, //SUM_COUNT_UNIQUE,
+// กรณีที่ 3 "เป็น Score Total"
+IF( MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Score Total", C_Total_Score, //SUM_SCORE,
+// กรณีที่ 4 "เป็น Score เดี่ยวๆ"
+IF( CONTAINSSTRING(MIN(VW_FACT_MS_FORM_REPORT[Question_Number]),"S"), C_Score, //SUM_SCORE_S_UNIQUE,
+// กรณีที่ 5 "เป็น Total Grade"
+IF( MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Total Grade", C_Grade, // C_Grade, //GSUM,
+// กรณีที่ 6 "เป็น Comment"
+IF( MIN(VW_FACT_MS_FORM_REPORT[Question_Number]) = "Z-Comment", "",
+BLANK() )))))))))
+
+RETURN
+    IF(
+        OR(VALUE(SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[FormYear], "0")) <= 1999, VALUE(SELECTEDVALUE(VW_FACT_MS_FORM_REPORT[FormYear], "0")) >= 2025),
+        SC_New,
+        SC_Old
+    )
+

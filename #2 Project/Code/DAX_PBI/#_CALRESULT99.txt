@@ -1,0 +1,21 @@
+#_CALRESULT99 = 
+VAR Logis =  CALCULATE([#_CALRESULT1] , VW_FACT_MS_FORM[Function_Name] = "Logistic")
+VAR Manu =  CALCULATE([#_CALRESULT1] , VW_FACT_MS_FORM[Function_Name] = "Manufacturing")
+VAR IT =  CALCULATE([#_CALRESULT1] , VW_FACT_MS_FORM[Function_Name] = "IT")
+VAR WASTE =  CALCULATE([#_CALRESULT1] , VW_FACT_MS_FORM[Function_Name] = "WASTE")
+VAR RM =  CALCULATE([#_CALRESULT1] , VW_FACT_MS_FORM[Function_Name] = "RM&PKG")
+VAR Com=  CALCULATE([#_CALRESULT1] , VW_FACT_MS_FORM[Function_Name] = "Commercial")
+VAR Outsource =  CALCULATE([#_CALRESULT1] , VW_FACT_MS_FORM[Function_Name] = "Outsource")
+VAR AGILE =  CALCULATE([#_CALRESULT1] , VW_FACT_MS_FORM[Function_Name] = "AGILE")
+VAR PROP =  CALCULATE([#_CALRESULT1] , VW_FACT_MS_FORM[Function_Name] = "PROPERTY")
+VAR ENEG_CHEM =  CALCULATE([#_CALRESULT1] , VW_FACT_MS_FORM[Function_Name] = "ENEG_CHEM")
+
+var result = IF( NOT(ISFILTERED(VW_FACT_MS_FORM[Function_Name])), (Logis + Manu + IT + WASTE + RM + Com + AGILE + PROP + ENEG_CHEM + Outsource) / [#12] ,
+                IF( AND(ISFILTERED(VW_FACT_MS_FORM[Function_Name]) , [#11] = "Logistic,Manufacturing") , (Logis + Manu) / [#12],
+                        IF( AND(ISFILTERED(VW_FACT_MS_FORM[Function_Name]) , [#11] = "IT,WASTE") , (IT + WASTE) / [#12],
+    [#_CALRESULT1])
+    ))
+
+Return 
+IF( result
+     > 100, 100, result)

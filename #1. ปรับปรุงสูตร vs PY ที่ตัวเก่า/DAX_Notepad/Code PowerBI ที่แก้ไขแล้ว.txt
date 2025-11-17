@@ -1,0 +1,106 @@
+#_CALRESULT1 = 
+
+VAR T =
+SUMX(
+SUMMARIZE(
+VW_FACT_MS_FORM,
+VW_FACT_MS_FORM[Function_Name],
+VW_FACT_MS_FORM[Scoring_Group],
+VW_FACT_MS_FORM[Pur_Grp],
+VW_FACT_MS_FORM[Question_Number],
+
+"SumScore",
+CALCULATE( SUM(VW_FACT_MS_FORM[Score_UniqueID]) , ALL(VW_FACT_MS_FORM[UniqueID]) ) /
+CALCULATE( DISTINCTCOUNT(VW_FACT_MS_FORM[UniqueID]) , ALL(VW_FACT_MS_FORM[UniqueID]) )
+) , [SumScore]
+)VAR Z = T / DISTINCTCOUNT(VW_FACT_MS_FORM[Scoring_Group])
+
+VAR X = SUMX(
+SUMMARIZE(
+VW_FACT_MS_FORM,
+VW_FACT_MS_FORM[Function_Name],
+VW_FACT_MS_FORM[Vendor_Name],
+VW_FACT_MS_FORM[RoundYear],
+
+"SumScore", AVERAGE(VW_FACT_MS_FORM[RawVendorLevelScore])
+
+) , [SumScore])
+
+RETURN  //IF( HASONEVALUE(VW_FORM_CONTROL[NewRoundYear]) &&  SELECTEDVALUE(VW_FORM_CONTROL[NewRoundYear]) <> "All" && ISINSCOPE(VW_FACT_MS_FORM[FormYear]),  AVERAGE(VW_FACT_MS_FORM[RawVendorLevelScore]) ,Z)
+
+//x/COUNTROWS(distinct(VW_FACT_MS_FORM[RawVendorLevelScore]))
+IF( ISINSCOPE(VW_FACT_MS_FORM[FormYear]), x/COUNTROWS(distinct(VW_FACT_MS_FORM[RoundYear])), Z)
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+#_CALRESULT1_PY = 
+
+VAR T =
+SUMX(
+CALCULATETABLE(
+SUMMARIZE(
+VW_FACT_MS_FORM,
+VW_FACT_MS_FORM[Function_Name],
+VW_FACT_MS_FORM[Scoring_Group],
+VW_FACT_MS_FORM[Pur_Grp],
+VW_FACT_MS_FORM[Question_Number],
+
+"SumScore",
+CALCULATE( SUM(VW_FACT_MS_FORM[Score_UniqueID]) , ALL(VW_FACT_MS_FORM[UniqueID])) /
+CALCULATE( DISTINCTCOUNT(VW_FACT_MS_FORM[UniqueID]) , ALL(VW_FACT_MS_FORM[UniqueID]))
+) , VW_FACT_MS_FORM[FormYear]  = SELECTEDVALUE(VW_FACT_MS_FORM[FormYear])-1
+)
+, [SumScore]
+)
+
+
+VAR Z = T / CALCULATE(
+    DISTINCTCOUNT(VW_FACT_MS_FORM[Scoring_Group]),
+    FILTER(
+        ALL(VW_FACT_MS_FORM[FormYear]),
+        VW_FACT_MS_FORM[FormYear] = MAX(VW_FACT_MS_FORM[FormYear]) - 1
+    )
+)
+
+
+VAR X = SUMX(
+CALCULATETABLE(
+SUMMARIZE(
+VW_FACT_MS_FORM,
+VW_FACT_MS_FORM[Function_Name],
+VW_FACT_MS_FORM[Vendor_Name],
+VW_FACT_MS_FORM[RoundYear],
+"SumScore", AVERAGE(VW_FACT_MS_FORM[RawVendorLevelScore])
+
+) , VW_FACT_MS_FORM[FormYear]  = SELECTEDVALUE(VW_FACT_MS_FORM[FormYear])-1
+
+),
+ [SumScore])
+
+RETURN  
+// IF( ISINSCOPE(VW_FACT_MS_FORM[FormYear]), x/COUNTROWS(DISTINCT( SELECTCOLUMNS( VW_FACT_MS_FORM, "PrevYear", VW_FACT_MS_FORM[RoundYear] - 1))), Z)
+IF( ISINSCOPE(VW_FACT_MS_FORM[FormYear]), x/COUNTROWS(distinct(CALCULATETABLE(
+            VALUES(VW_FACT_MS_FORM[RoundYear]), 
+            REMOVEFILTERS(VW_FACT_MS_FORM[FormYear]),
+                VW_FACT_MS_FORM[FormYear] = MAX(VW_FACT_MS_FORM[FormYear]) - 1
+           ))), Z)
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+#_CALRESULT99_PY = 
+VAR Logis =  CALCULATE([#_CALRESULT1_PY] , VW_FACT_MS_FORM[Function_Name] = "Logistic")
+VAR Manu =  CALCULATE([#_CALRESULT1_PY] , VW_FACT_MS_FORM[Function_Name] = "Manufacturing")
+VAR IT =  CALCULATE([#_CALRESULT1_PY] , VW_FACT_MS_FORM[Function_Name] = "IT")
+VAR WASTE =  CALCULATE([#_CALRESULT1_PY] , VW_FACT_MS_FORM[Function_Name] = "WASTE")
+VAR RM =  CALCULATE([#_CALRESULT1_PY] , VW_FACT_MS_FORM[Function_Name] = "RM&PKG")
+VAR Com=  CALCULATE([#_CALRESULT1_PY] , VW_FACT_MS_FORM[Function_Name] = "Commercial")
+
+var result = IF( NOT(ISFILTERED(VW_FACT_MS_FORM[Function_Name])), (Logis + Manu + IT + WASTE + RM + Com) / [#12] ,
+                IF( AND(ISFILTERED(VW_FACT_MS_FORM[Function_Name]) , [#11] = "Logistic,Manufacturing") , (Logis + Manu) / [#12],
+                        IF( AND(ISFILTERED(VW_FACT_MS_FORM[Function_Name]) , [#11] = "IT,WASTE") , (IT + WASTE) / [#12],
+    [#_CALRESULT1_PY])
+    ))
+
+Return 
+IF( result
+     > 100, 100, result)

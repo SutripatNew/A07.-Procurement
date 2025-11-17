@@ -1,0 +1,55 @@
+--SELECT 
+--FROM [dbo].[VW_FACT_MS_FORM]
+--WHERE	[FormYear] = 2023
+--		AND [Function_Name] = 'RM&PKG'
+--		AND (Vendor_Name like '9000101645%' OR  Vendor_Name like '9000104634%')
+
+
+
+;WITH T AS (
+SELECT SUM(M.SumScore) AS SumScore
+	FROM (
+	SELECT	Function_Name,
+			Scoring_Group,
+			Pur_Grp,
+			Question_Number,
+			SUM(Score_UniqueID)Count(distinct UniqueID) AS SumScore
+	FROM [dbo].[VW_FACT_MS_FORM]
+	WHERE	[FormYear] = 2023
+			AND [Function_Name] = 'RM&PKG'
+			AND (Vendor_Name like '9000101645%' OR  Vendor_Name like '9000104634%' )
+	GROUP BY Function_Name, Scoring_Group, Pur_Grp, Question_Number
+	) M
+)
+ --SELECT  FROM T
+ ,
+Z AS (
+SELECT (SELECT SumScore FROM T)  (SELECT count(distinct Scoring_Group) FROM [dbo].[VW_FACT_MS_FORM] 
+		WHERE	[FormYear] = 2023
+			AND [Function_Name] = 'RM&PKG'
+			AND (Vendor_Name like '9000101645%' OR  Vendor_Name like '9000104634%' )
+		) AS Result
+)
+--SELECT  FROM Z
+
+,
+X AS (
+SELECT SUM(SumScore) AS SumScore
+FROM (
+	SELECT	Function_Name,
+			Vendor_Name,
+			RoundYear,
+			AVG(RawVendorLevelScore) AS SumScore
+	FROM [dbo].[VW_FACT_MS_FORM]
+	WHERE	[FormYear] = 2023
+			AND [Function_Name] = 'RM&PKG'
+			AND (Vendor_Name like '9000101645%' OR  Vendor_Name like '9000104634%'  )
+	GROUP BY Function_Name, Vendor_Name, RoundYear
+	) M
+)
+--SELECT  FROM X
+
+SELECT (SELECT SumScore FROM X)  (SELECT COUNT(DISTINCT ISNULL(RoundYear,'')) FROM [dbo].[VW_FACT_MS_FORM]
+		WHERE	[FormYear] = 2023
+			AND [Function_Name] = 'RM&PKG'
+			AND (Vendor_Name like '9000101645%' OR  Vendor_Name like '9000104634%'  )) AS Result
