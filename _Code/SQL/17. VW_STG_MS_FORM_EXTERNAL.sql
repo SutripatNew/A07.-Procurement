@@ -1,4 +1,4 @@
-USE [TNTL_PUR_DEV]
+USE [TNTL_PUR]
 GO
 
 /****** Object:  View [dbo].[VW_STG_MS_FORM_EXTERNAL]    Script Date: 21/8/2568 9:11:26 ******/
@@ -16,7 +16,7 @@ GO
 
 
 
-ALTER VIEW [dbo].[VW_STG_MS_FORM_EXTERNAL] AS 
+CREATE VIEW [dbo].[VW_STG_MS_FORM_EXTERNAL] AS 
 
 -- Vendor Evaluation Dashboard V1.
 --SELECT *

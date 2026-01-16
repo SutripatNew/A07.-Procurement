@@ -1,4 +1,4 @@
-USE [TNTL_PUR_DEV]
+USE [TNTL_PUR]
 GO
 
 /****** Object:  View [dbo].[VW_STG_MS_FORM_RM]    Script Date: 4/6/2568 10:32:30 ******/
@@ -15,7 +15,7 @@ GO
 
 
 
-ALTER VIEW [dbo].[VW_STG_MS_FORM_RM] AS 
+CREATE VIEW [dbo].[VW_STG_MS_FORM_RM] AS 
 
 -- Vendor Evaluation Dashboard V1.
 
@@ -117,7 +117,9 @@ FROM
 		COALESCE(Level2,'') As Level2,
 		CAST(NULL AS NVARCHAR(100)) AS Level3,
 		Pur_Grp ,
-		[โรงงาน] AS Plant,
+		CASE	WHEN [โรงงาน] = 'ALL' THEN 'ALL สำหรับ Packaging' 
+				WHEN [โรงงาน] = 'ALL สำหรับ Packaging เท่านั้น' THEN 'ALL สำหรับ Packaging' 
+				ELSE [โรงงาน] END AS Plant,
 		[ประเภทสินค้า] AS Product,
 		COALESCE([ผู้รับการประเมิน ALL],'') AS Vendor_Name,
 		[ข้อเสนอแนะ และคำแนะนำเพิ่มเติม] as Comment1,

@@ -1,4 +1,4 @@
-USE [TNTL_PUR_DEV]
+USE [TNTL_PUR]
 GO
 
 /****** Object:  View [dbo].[VW_FACT_MS_FORM_GROUPING_V2]    Script Date: 21/4/2568 13:18:45 ******/

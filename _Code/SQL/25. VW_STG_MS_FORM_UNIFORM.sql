@@ -1,7 +1,7 @@
-USE [TNTL_PUR_DEV]
+USE [TNTL_PUR]
 GO
 
-/****** Object:  View [dbo].[VW_STG_MS_FORM_WASTE]    Script Date: 20/5/2568 9:55:46 ******/
+/****** Object:  View [dbo].[VW_STG_MS_FORM_UNIFORM]    Script Date: 20/5/2568 9:46:59 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -16,9 +16,7 @@ GO
 
 
 
-
-
-ALTER VIEW [dbo].[VW_STG_MS_FORM_WASTE] AS 
+CREATE VIEW [dbo].[VW_STG_MS_FORM_UNIFORM] AS 
 
 -- Vendor Evaluation Dashboard V1.
 
@@ -26,8 +24,8 @@ ALTER VIEW [dbo].[VW_STG_MS_FORM_WASTE] AS
 --FROM
 --(
 --	SELECT 
---	N'WASTE' as Function_Name,
---	CAST('' AS NVARCHAR(100)) as Function_SubType,
+--	N'Commercial' as Function_Name,
+--	CAST(A.Level2 AS NVARCHAR(100)) as Function_SubType,
 --	A.SharePoint_List+'_'+RIGHT(CAST(10000+A.Item_ID AS NVARCHAR(10)),4) AS UniqueID,
 --	A.*,
 --	C.Question_Order,
@@ -45,8 +43,9 @@ ALTER VIEW [dbo].[VW_STG_MS_FORM_WASTE] AS
 --		Item_ID,Title,
 --		DATEADD("hour",7,TRY_CAST([Submission Time] AS DATETIME2(0))) AS SubmissionTime,
 --		[Responder Email] AS ResponderEmail,
---		Level1,Level2, 
---		CAST(NULL AS NVARCHAR(100)) AS Level3,
+--		N'UNIFORM' AS Level1,
+--		Level1 AS Level2, 
+--		Level2 AS Level3,
 --		CAST(NULL AS NVARCHAR(100)) AS Pur_Grp,
 --		CAST(NULL AS NVARCHAR(100))  AS Plant,
 --		CAST(NULL AS NVARCHAR(100)) AS Product,
@@ -58,30 +57,30 @@ ALTER VIEW [dbo].[VW_STG_MS_FORM_WASTE] AS
 --		Above1MB
 --		FROM  
 --		(
---			SELECT SHAREPOINT_LIST,ITEM_ID,Title,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_WASTE
+--			SELECT SHAREPOINT_LIST,ITEM_ID,Title,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_UNIFORM
 --			WHERE QUESTION_NAME IN ('ปีที่ประเมิน','Submission Time','Responder Email','Level1','Level2','ผู้รับการประเมิน ALL','ข้อเสนอแนะ เพื่อปรับปรุงการบริการของ Vendor','Above1MB','รอบการประเมิน','BelowThreshold', 'Pur_Grp')
 --		) AS F
 --		PIVOT  
 --		(  
---		MIN(RESPONSE) FOR QUESTION_NAME IN ([ปีที่ประเมิน],[Submission Time],[Responder Email],[Level1],[Level2],[ผู้รับการประเมิน ALL],[ข้อเสนอแนะ เพื่อปรับปรุงการบริการของ Vendor],[Above1MB],[รอบการประเมิน],[BelowThreshold], [Pur_Grp])
+--		MIN(RESPONSE) FOR QUESTION_NAME IN ([ปีที่ประเมิน], [Submission Time],[Responder Email],[Level1],[Level2],[ผู้รับการประเมิน ALL],[ข้อเสนอแนะ เพื่อปรับปรุงการบริการของ Vendor],[Above1MB],[รอบการประเมิน],[BelowThreshold], [Pur_Grp])
 --		) AS P
 --	) A 
 --	LEFT JOIN (
---		SELECT SHAREPOINT_LIST,ITEM_ID,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_WASTE
+--		SELECT SHAREPOINT_LIST,ITEM_ID,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_UNIFORM
 --		WHERE QUESTION_NAME NOT IN ('ปีที่ประเมิน','Submission Time','Responder Email','Level1','Level2','ผู้รับการประเมิน ALL','ข้อเสนอแนะ เพื่อปรับปรุงการบริการของ Vendor','Above1MB','รอบการประเมิน','BelowThreshold', 'Pur_Grp')
 --	) B
 --	ON A.Item_ID = B.ITEM_ID
 --	LEFT JOIN (
---		SELECT DISTINCT QUESTION_NAME,QUESTION_ORDER FROM STG_MS_FORM_WASTE
+--		SELECT DISTINCT QUESTION_NAME,QUESTION_ORDER FROM STG_MS_FORM_UNIFORM
 --	) C
 --	ON B.QUESTION_NAME = C.QUESTION_NAME
+
 --	LEFT JOIN (
---		SELECT DISTINCT [YEAR],FUNCTION_NAME,QUESTION,QUESTION_DISPLAY FROM STG_QUESTION
+--		SELECT DISTINCT [YEAR],FUNCTION_NAME,LEVEL1,LEVEL2,QUESTION,QUESTION_DISPLAY FROM STG_QUESTION
 --	) D
---	ON A.formyear = D.[YEAR] AND C.question_name = D.QUESTION
+--	ON A.formyear = D.[YEAR] AND C.question_name = D.QUESTION  AND  N'Uniform' =  D.LEVEL1 AND A.Level2 = D.LEVEL2
 
-
---	-- SELECT DISTINCT '['+QUESTION_NAME+']',''''+QUESTION_NAME+'''' FROM STG_MS_FORM_IT ORDER BY 1
+--	-- SELECT DISTINCT '['+QUESTION_NAME+']',''''+QUESTION_NAME+'''' FROM STG_MS_FORM_UNIFORM ORDER BY 1
 --) M
 --WHERE M.[FormYear] > 1999
 
@@ -93,8 +92,8 @@ SELECT *
 FROM
 (
 	SELECT 
-	N'WASTE' as Function_Name,
-	CAST('' AS NVARCHAR(100)) as Function_SubType,
+	N'Commercial' as Function_Name,
+	CAST(A.Level2 AS NVARCHAR(100)) as Function_SubType,
 	A.SharePoint_List+'_'+RIGHT(CAST(10000+A.Item_ID AS NVARCHAR(10)),4) AS UniqueID,
 	A.*,
 	C.Question_Order,
@@ -112,8 +111,9 @@ FROM
 		Item_ID,Title,
 		DATEADD("hour",7,TRY_CAST([Submission Time] AS DATETIME2(0))) AS SubmissionTime,
 		[Responder Email] AS ResponderEmail,
-		Level1,Level2, 
-		CAST(NULL AS NVARCHAR(100)) AS Level3,
+		N'UNIFORM' AS Level1,
+		Level1 AS Level2, 
+		Level2 AS Level3,
 		Pur_Grp AS Pur_Grp,
 		CAST(NULL AS NVARCHAR(100))  AS Plant,
 		CAST(NULL AS NVARCHAR(100)) AS Product,
@@ -125,30 +125,30 @@ FROM
 		Above1MB
 		FROM  
 		(
-			SELECT SHAREPOINT_LIST,ITEM_ID,Title,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_WASTE
+			SELECT SHAREPOINT_LIST,ITEM_ID,Title,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_UNIFORM
 			WHERE QUESTION_NAME IN ('ปีที่ประเมิน','Submission Time','Responder Email','Level1','Level2','ผู้รับการประเมิน ALL','ข้อเสนอแนะ เพื่อปรับปรุงการบริการของ Vendor','Above1MB','รอบการประเมิน','BelowThreshold', 'Pur_Grp')
 		) AS F
 		PIVOT  
 		(  
-		MIN(RESPONSE) FOR QUESTION_NAME IN ([ปีที่ประเมิน],[Submission Time],[Responder Email],[Level1],[Level2],[ผู้รับการประเมิน ALL],[ข้อเสนอแนะ เพื่อปรับปรุงการบริการของ Vendor],[Above1MB],[รอบการประเมิน],[BelowThreshold], [Pur_Grp])
+		MIN(RESPONSE) FOR QUESTION_NAME IN ([ปีที่ประเมิน], [Submission Time],[Responder Email],[Level1],[Level2],[ผู้รับการประเมิน ALL],[ข้อเสนอแนะ เพื่อปรับปรุงการบริการของ Vendor],[Above1MB],[รอบการประเมิน],[BelowThreshold], [Pur_Grp])
 		) AS P
 	) A 
 	LEFT JOIN (
-		SELECT SHAREPOINT_LIST,ITEM_ID,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_WASTE
+		SELECT SHAREPOINT_LIST,ITEM_ID,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_UNIFORM
 		WHERE QUESTION_NAME NOT IN ('ปีที่ประเมิน','Submission Time','Responder Email','Level1','Level2','ผู้รับการประเมิน ALL','ข้อเสนอแนะ เพื่อปรับปรุงการบริการของ Vendor','Above1MB','รอบการประเมิน','BelowThreshold', 'Pur_Grp')
 	) B
 	ON A.Item_ID = B.ITEM_ID
 	LEFT JOIN (
-		SELECT DISTINCT QUESTION_NAME,QUESTION_ORDER FROM STG_MS_FORM_WASTE
+		SELECT DISTINCT QUESTION_NAME,QUESTION_ORDER FROM STG_MS_FORM_UNIFORM
 	) C
 	ON B.QUESTION_NAME = C.QUESTION_NAME
+
 	LEFT JOIN (
-		SELECT DISTINCT [YEAR],FUNCTION_NAME,QUESTION_CODE,QUESTION_DISPLAY FROM STG_QUESTION
+		SELECT DISTINCT [YEAR],FUNCTION_NAME,LEVEL1,LEVEL2,QUESTION_CODE,QUESTION_DISPLAY FROM STG_QUESTION
 	) D
-	ON A.formyear = D.[YEAR] AND LEFT(C.question_name,4) = D.QUESTION_CODE
+	ON A.formyear = D.[YEAR] AND LEFT(C.question_name,4) = D.QUESTION_CODE  AND  N'Uniform' =  D.LEVEL1 AND A.Level2 = D.LEVEL2
 
-
-	-- SELECT DISTINCT '['+QUESTION_NAME+']',''''+QUESTION_NAME+'''' FROM STG_MS_FORM_IT ORDER BY 1
+	-- SELECT DISTINCT '['+QUESTION_NAME+']',''''+QUESTION_NAME+'''' FROM STG_MS_FORM_UNIFORM ORDER BY 1
 ) M
 WHERE M.[FormYear] <= 1999 or M.[FormYear] >= 2025
 

@@ -1,4 +1,4 @@
-USE [TNTL_PUR_DEV]
+USE [TNTL_PUR]
 GO
 
 /****** Object:  StoredProcedure [dbo].[SP_PROC_MS_FORM]    Script Date: 18/4/2568 17:02:16 ******/

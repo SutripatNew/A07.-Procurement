@@ -1,7 +1,7 @@
-USE [TNTL_PUR_DEV]
+USE [TNTL_PUR]
 GO
 
-/****** Object:  View [dbo].[VW_STG_MS_FORM_MFG]    Script Date: 20/5/2568 9:29:27 ******/
+/****** Object:  View [dbo].[VW_STG_MS_FORM_OUTSOURCE]    Script Date: 27/5/2568 10:55:29 ******/
 SET ANSI_NULLS ON
 GO
 
@@ -16,7 +16,7 @@ GO
 
 
 
-CREATE VIEW [dbo].[VW_STG_MS_FORM_MFG] AS 
+CREATE VIEW [dbo].[VW_STG_MS_FORM_OUTSOURCE] AS 
 
 -- Vendor Evaluation Dashboard V1.
 
@@ -24,7 +24,7 @@ CREATE VIEW [dbo].[VW_STG_MS_FORM_MFG] AS
 --FROM
 --(
 --	SELECT 
---	N'Manufacturing' as Function_Name,
+--	N'Commercial' as Function_Name,
 --	CAST('' AS NVARCHAR(100)) as Function_SubType,
 --	A.SharePoint_List+'_'+RIGHT(CAST(10000+A.Item_ID AS NVARCHAR(10)),4) AS UniqueID,
 --	A.*,
@@ -39,12 +39,12 @@ CREATE VIEW [dbo].[VW_STG_MS_FORM_MFG] AS
 --		WHEN [ปีที่ประเมิน] IS NULL THEN CAST(YEAR([Submission Time]) as NVARCHAR(20))
 --		ELSE REPLACE(CAST([ปีที่ประเมิน] as NVARCHAR(20)),'Y','') END AS FormYear,
 --		[รอบการประเมิน] AS RoundYear,
-
 --		SharePoint_List,
 --		Item_ID,Title,
 --		DATEADD("hour",7,TRY_CAST([Submission Time] AS DATETIME2(0))) AS SubmissionTime,
 --		[Responder Email] AS ResponderEmail,
---		Level1,Level2, 
+--		N'OUTSOURCE' AS Level1,
+--		/*N'OUTSOURCE' AS*/ Level2, 
 --		CAST(NULL AS NVARCHAR(100)) AS Level3,
 --		CAST(NULL AS NVARCHAR(100)) AS Pur_Grp,
 --		CAST(NULL AS NVARCHAR(100))  AS Plant,
@@ -57,7 +57,7 @@ CREATE VIEW [dbo].[VW_STG_MS_FORM_MFG] AS
 --		Above1MB
 --		FROM  
 --		(
---			SELECT SHAREPOINT_LIST,ITEM_ID,Title,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_MFG
+--			SELECT SHAREPOINT_LIST,ITEM_ID,Title,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_OUTSOURCE
 --			WHERE QUESTION_NAME IN ('ปีที่ประเมิน','Submission Time','Responder Email','Level1','Level2','ผู้รับการประเมิน ALL','ข้อเสนอแนะ เพื่อปรับปรุงการบริการของ Vendor','Above1MB','รอบการประเมิน','BelowThreshold', 'Pur_Grp')
 --		) AS F
 --		PIVOT  
@@ -66,20 +66,21 @@ CREATE VIEW [dbo].[VW_STG_MS_FORM_MFG] AS
 --		) AS P
 --	) A 
 --	LEFT JOIN (
---		SELECT SHAREPOINT_LIST,ITEM_ID,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_MFG
+--		SELECT SHAREPOINT_LIST,ITEM_ID,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_OUTSOURCE
 --		WHERE QUESTION_NAME NOT IN ('ปีที่ประเมิน','Submission Time','Responder Email','Level1','Level2','ผู้รับการประเมิน ALL','ข้อเสนอแนะ เพื่อปรับปรุงการบริการของ Vendor','Above1MB','รอบการประเมิน','BelowThreshold', 'Pur_Grp')
 --	) B
 --	ON A.ITEM_ID = B.ITEM_ID
 --	LEFT JOIN (
---		SELECT DISTINCT QUESTION_NAME,QUESTION_ORDER FROM STG_MS_FORM_MFG
+--		SELECT DISTINCT QUESTION_NAME,QUESTION_ORDER FROM STG_MS_FORM_OUTSOURCE
 --	) C
 --	ON B.QUESTION_NAME = C.QUESTION_NAME
+
 --	LEFT JOIN (
 --		SELECT DISTINCT [YEAR],FUNCTION_NAME,LEVEL1,QUESTION,QUESTION_DISPLAY FROM STG_QUESTION
 --	) D
---	ON A.formyear = D.[YEAR] AND C.question_name = D.QUESTION AND N'Manufacturing' = D.LEVEL1
+--	ON A.formyear = D.[YEAR] AND C.question_name = D.QUESTION AND  N'Outsource' =  D.LEVEL1
 
---	-- SELECT DISTINCT '['+QUESTION_NAME+']',''''+QUESTION_NAME+'''' FROM STG_MS_FORM_MFG ORDER BY 1
+--	-- SELECT DISTINCT '['+QUESTION_NAME+']',''''+QUESTION_NAME+'''' FROM STG_MS_FORM_OUTSOURCE ORDER BY 1
 --) M
 --WHERE M.[FormYear] > 1999
 
@@ -91,7 +92,7 @@ SELECT *
 FROM
 (
 	SELECT 
-	N'Manufacturing' as Function_Name,
+	N'Outsource' as Function_Name,
 	CAST('' AS NVARCHAR(100)) as Function_SubType,
 	A.SharePoint_List+'_'+RIGHT(CAST(10000+A.Item_ID AS NVARCHAR(10)),4) AS UniqueID,
 	A.*,
@@ -106,12 +107,12 @@ FROM
 		WHEN [ปีที่ประเมิน] IS NULL THEN CAST(YEAR([Submission Time]) as NVARCHAR(20))
 		ELSE REPLACE(CAST([ปีที่ประเมิน] as NVARCHAR(20)),'Y','') END AS FormYear,
 		[รอบการประเมิน] AS RoundYear,
-
 		SharePoint_List,
 		Item_ID,Title,
 		DATEADD("hour",7,TRY_CAST([Submission Time] AS DATETIME2(0))) AS SubmissionTime,
 		[Responder Email] AS ResponderEmail,
-		Level1,Level2, 
+		N'OUTSOURCE' AS Level1,
+		/*N'OUTSOURCE' AS*/ Level2, 
 		CAST(NULL AS NVARCHAR(100)) AS Level3,
 		Pur_Grp AS Pur_Grp,
 		CAST(NULL AS NVARCHAR(100))  AS Plant,
@@ -124,7 +125,7 @@ FROM
 		Above1MB
 		FROM  
 		(
-			SELECT SHAREPOINT_LIST,ITEM_ID,Title,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_MFG
+			SELECT SHAREPOINT_LIST,ITEM_ID,Title,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_OUTSOURCE
 			WHERE QUESTION_NAME IN ('ปีที่ประเมิน','Submission Time','Responder Email','Level1','Level2','ผู้รับการประเมิน ALL','ข้อเสนอแนะ เพื่อปรับปรุงการบริการของ Vendor','Above1MB','รอบการประเมิน','BelowThreshold', 'Pur_Grp')
 		) AS F
 		PIVOT  
@@ -133,22 +134,24 @@ FROM
 		) AS P
 	) A 
 	LEFT JOIN (
-		SELECT SHAREPOINT_LIST,ITEM_ID,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_MFG
+		SELECT SHAREPOINT_LIST,ITEM_ID,QUESTION_NAME,RESPONSE FROM STG_MS_FORM_OUTSOURCE
 		WHERE QUESTION_NAME NOT IN ('ปีที่ประเมิน','Submission Time','Responder Email','Level1','Level2','ผู้รับการประเมิน ALL','ข้อเสนอแนะ เพื่อปรับปรุงการบริการของ Vendor','Above1MB','รอบการประเมิน','BelowThreshold', 'Pur_Grp')
 	) B
 	ON A.ITEM_ID = B.ITEM_ID
 	LEFT JOIN (
-		SELECT DISTINCT QUESTION_NAME,QUESTION_ORDER FROM STG_MS_FORM_MFG
+		SELECT DISTINCT QUESTION_NAME,QUESTION_ORDER FROM STG_MS_FORM_OUTSOURCE
 	) C
 	ON B.QUESTION_NAME = C.QUESTION_NAME
+
 	LEFT JOIN (
 		SELECT DISTINCT [YEAR],FUNCTION_NAME,LEVEL1,QUESTION_CODE,QUESTION_DISPLAY FROM STG_QUESTION
 	) D
-	ON A.formyear = D.[YEAR] AND LEFT(C.question_name,4) = D.QUESTION_CODE AND N'Manufacturing' = D.LEVEL1
+	ON A.formyear = D.[YEAR] AND LEFT(C.question_name,4) = D.QUESTION_CODE AND  N'Outsource' =  D.LEVEL1
 
-	-- SELECT DISTINCT '['+QUESTION_NAME+']',''''+QUESTION_NAME+'''' FROM STG_MS_FORM_MFG ORDER BY 1
+	-- SELECT DISTINCT '['+QUESTION_NAME+']',''''+QUESTION_NAME+'''' FROM STG_MS_FORM_OUTSOURCE ORDER BY 1
 ) M
 WHERE M.[FormYear] <= 1999 or M.[FormYear] >= 2025
+
 
 
 GO
