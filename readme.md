@@ -1,7 +1,7 @@
 # 📌 Procurement (Vendor Evaluation Project)
 
 Repository นี้ใช้สำหรับจัดเก็บ **SQL Code**, **Requirements**, และ **Meeting Notes**  
-ที่เกี่ยวข้องกับการพัฒนาและปรับปรุงระบบ **MS FORM**
+ที่เกี่ยวข้องกับการพัฒนาและปรับปรุงระบบ **MS FORM** 
 
 ---
 
