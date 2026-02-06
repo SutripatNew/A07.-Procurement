@@ -1,5 +1,0 @@
-Process
-ปรับคำถาม (คอลัมน์) ที่ SharePoint List
-ปรับ Mapping power automate
-เอา Table Question Master เข้า SQL
-Test
